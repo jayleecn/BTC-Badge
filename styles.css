@@ -11,7 +11,7 @@ body {
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 }
-.stats:first-child {
+.stats.first-child {
     font-weight: bold;
     font-size: 1.2em;
 }

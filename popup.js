@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-  fetchBitcoinStats();
   loadBadgeMetric();
+  fetchBitcoinStats();
   document.getElementById('badgeMetric').addEventListener('change', updateBadgeMetric);
 });
 
@@ -30,11 +30,28 @@ const displayStats = data => {
   const mvrvZScore = parseFloat(data.current_mvrvzscore).toFixed(1);
   const piMultiple = parseFloat(data.current_pimultiple).toFixed(1);
 
-  statsDiv.innerHTML = `
-    <div class="stats">BTC Price: <span>${btcPrice}</span></div>
-    <div class="stats">MVRV Z-Score: <span>${mvrvZScore}</span></div>
-    <div class="stats">PI Multiple: <span>${piMultiple}</span></div>
-  `;
+  const currentMetric = document.getElementById('badgeMetric').value;
+
+  let statsHtml = '';
+  const statsOrder = [
+    { key: 'mvrvzscore', label: 'MVRV Z-Score', value: mvrvZScore },
+    { key: 'pimultiple', label: 'PI Multiple', value: piMultiple },
+    { key: 'btc_price', label: 'BTC Price', value: btcPrice }
+  ];
+
+  // 将当前选中的指标移到数组的第一位
+  const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
+  if (selectedStatIndex !== -1) {
+    const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
+    statsOrder.unshift(selectedStat);
+  }
+
+  statsOrder.forEach((stat, index) => {
+    const className = index === 0 ? 'stats first-child' : 'stats';
+    statsHtml += `<div class="${className}">${stat.label}: <span>${stat.value}</span></div>`;
+  });
+
+  statsDiv.innerHTML = statsHtml;
 };
 
 const loadBadgeMetric = () => {
@@ -49,5 +66,6 @@ const updateBadgeMetric = () => {
   const metric = document.getElementById('badgeMetric').value;
   chrome.storage.sync.set({badgeMetric: metric}, () => {
     chrome.runtime.sendMessage({action: "updateBadgeMetric", metric: metric});
+    fetchBitcoinStats(); // 重新获取并显示数据，以更新顺序
   });
 };
