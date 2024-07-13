@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   loadBadgeMetric();
   fetchBitcoinStats();
-  document.getElementById('badgeMetric').addEventListener('change', updateBadgeMetric);
 });
 
 const fetchBitcoinStats = () => {
@@ -30,42 +29,67 @@ const displayStats = data => {
   const mvrvZScore = parseFloat(data.current_mvrvzscore).toFixed(1);
   const piMultiple = parseFloat(data.current_pimultiple).toFixed(1);
 
-  const currentMetric = document.getElementById('badgeMetric').value;
-
-  let statsHtml = '';
   const statsOrder = [
+    { key: 'btc_price', label: 'BTC Price', value: btcPrice },
     { key: 'mvrvzscore', label: 'MVRV Z-Score', value: mvrvZScore },
-    { key: 'pimultiple', label: 'PI Multiple', value: piMultiple },
-    { key: 'btc_price', label: 'BTC Price', value: btcPrice }
+    { key: 'pimultiple', label: 'PI Multiple', value: piMultiple }
   ];
 
-  // 将当前选中的指标移到数组的第一位
-  const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
-  if (selectedStatIndex !== -1) {
-    const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
-    statsOrder.unshift(selectedStat);
-  }
+  chrome.storage.sync.get('badgeMetric', (data) => {
+    const currentMetric = data.badgeMetric || 'mvrvzscore';
+    
+    // 将当前选中的指标移到数组的第一位
+    const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
+    if (selectedStatIndex !== -1) {
+      const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
+      statsOrder.unshift(selectedStat);
+    }
 
-  statsOrder.forEach((stat, index) => {
-    const className = index === 0 ? 'stats first-child' : 'stats';
-    statsHtml += `<div class="${className}">${stat.label}: <span>${stat.value}</span></div>`;
+    let statsHtml = '';
+    statsOrder.forEach((stat, index) => {
+      const className = index === 0 ? 'stats first-child' : 'stats';
+      statsHtml += `
+        <div class="${className}" data-metric="${stat.key}">
+          ${stat.label}: <span>${stat.value}</span>
+          <button class="pin-button" title="置顶显示">&#9650;</button>
+        </div>
+      `;
+    });
+
+    statsDiv.innerHTML = statsHtml;
+
+    // 添加事件监听器
+    document.querySelectorAll('.stats').forEach(statDiv => {
+      const button = statDiv.querySelector('.pin-button');
+      button.style.display = 'none';
+
+      statDiv.addEventListener('mouseenter', () => {
+        button.style.display = 'inline-block';
+      });
+
+      statDiv.addEventListener('mouseleave', () => {
+        button.style.display = 'none';
+      });
+
+      button.addEventListener('click', () => {
+        const metric = statDiv.dataset.metric;
+        updateBadgeMetric(metric);
+      });
+    });
   });
+};
 
-  statsDiv.innerHTML = statsHtml;
+const updateBadgeMetric = (metric) => {
+  chrome.storage.sync.set({badgeMetric: metric}, () => {
+    chrome.runtime.sendMessage({action: "updateBadgeMetric", metric: metric});
+    fetchBitcoinStats(); // 重新获取并显示数据，以更新顺序
+  });
 };
 
 const loadBadgeMetric = () => {
   chrome.storage.sync.get('badgeMetric', (data) => {
     if (data.badgeMetric) {
-      document.getElementById('badgeMetric').value = data.badgeMetric;
+      fetchBitcoinStats();
     }
-  });
-};
-
-const updateBadgeMetric = () => {
-  const metric = document.getElementById('badgeMetric').value;
-  chrome.storage.sync.set({badgeMetric: metric}, () => {
-    chrome.runtime.sendMessage({action: "updateBadgeMetric", metric: metric});
-    fetchBitcoinStats(); // 重新获取并显示数据，以更新顺序
   });
 };
