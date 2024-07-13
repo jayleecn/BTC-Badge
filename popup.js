@@ -38,7 +38,6 @@ const displayStats = data => {
   chrome.storage.sync.get('badgeMetric', (data) => {
     const currentMetric = data.badgeMetric || 'mvrvzscore';
     
-    // 将当前选中的指标移到数组的第一位
     const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
     if (selectedStatIndex !== -1) {
       const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
@@ -51,14 +50,13 @@ const displayStats = data => {
       statsHtml += `
         <div class="${className}" data-metric="${stat.key}">
           ${stat.label}: <span>${stat.value}</span>
-          <button class="pin-button" title="置顶显示">&#9650;</button>
+          <button class="pin-button" title="置顶显示">🔝</button>
         </div>
       `;
     });
 
     statsDiv.innerHTML = statsHtml;
 
-    // 添加事件监听器
     document.querySelectorAll('.stats').forEach(statDiv => {
       const button = statDiv.querySelector('.pin-button');
       button.style.display = 'none';
@@ -82,7 +80,7 @@ const displayStats = data => {
 const updateBadgeMetric = (metric) => {
   chrome.storage.sync.set({badgeMetric: metric}, () => {
     chrome.runtime.sendMessage({action: "updateBadgeMetric", metric: metric});
-    fetchBitcoinStats(); // 重新获取并显示数据，以更新顺序
+    fetchBitcoinStats();
   });
 };
 

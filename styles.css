@@ -26,11 +26,9 @@ body {
     top: 50%;
     transform: translateY(-50%);
     display: none;
-    background: url('pin-button.png') no-repeat center center;
-    background-size: contain;
+    background: none;
     border: none;
-    width: 20px;
-    height: 20px;
+    font-size: 16px;
     cursor: pointer;
     padding: 0;
 }
