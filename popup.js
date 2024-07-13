@@ -30,9 +30,9 @@ const displayStats = data => {
   const piMultiple = parseFloat(data.current_pimultiple).toFixed(1);
 
   const statsOrder = [
-    { key: 'btc_price', label: 'BTC Price', value: btcPrice },
-    { key: 'mvrvzscore', label: 'MVRV Z-Score', value: mvrvZScore },
-    { key: 'pimultiple', label: 'PI Multiple', value: piMultiple }
+    { key: 'btc_price', label: 'BTC Price', link:'https://coinmarketcap.com/currencies/bitcoin/historical-data/', value: btcPrice },
+    { key: 'mvrvzscore', label: 'MVRV Z-Score',link:'https://bitcoinition.com/charts/mvrv-z-score/',  value: mvrvZScore },
+    { key: 'pimultiple', label: 'PI Multiple',link:'https://bitcoinition.com/charts/pimultiple/',  value: piMultiple }
   ];
 
   chrome.storage.sync.get('badgeMetric', (data) => {
@@ -47,10 +47,10 @@ const displayStats = data => {
     let statsHtml = '';
     statsOrder.forEach((stat, index) => {
       const className = index === 0 ? 'stats first-child' : 'stats';
-      const pinButton = index === 0 ? '' : '<button class="pin-button" title="置顶显示">🔝</button>';
+      const pinButton = index === 0 ? '' : '<button class="pin-button" title="set as badge">🔝</button>';
       statsHtml += `
         <div class="${className}" data-metric="${stat.key}">
-          ${stat.label}: <span>${stat.value}</span>
+          <a href="${stat.link}" target="_blank">${stat.label}</a>: <span>${stat.value}</span>
           ${pinButton}
         </div>
       `;
