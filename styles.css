@@ -22,9 +22,10 @@ body {
 }
 .pin-button {
     position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
     display: none;
     background: none;
     border: none;
@@ -34,4 +35,5 @@ body {
 }
 .pin-button:hover {
     opacity: 0.8;
+    background-color: rgba(0, 0, 0, 0.1);
 }

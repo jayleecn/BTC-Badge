@@ -47,22 +47,23 @@ const displayStats = data => {
     let statsHtml = '';
     statsOrder.forEach((stat, index) => {
       const className = index === 0 ? 'stats first-child' : 'stats';
+      const pinButton = index === 0 ? '' : '<button class="pin-button" title="置顶显示">🔝</button>';
       statsHtml += `
         <div class="${className}" data-metric="${stat.key}">
           ${stat.label}: <span>${stat.value}</span>
-          <button class="pin-button" title="置顶显示">🔝</button>
+          ${pinButton}
         </div>
       `;
     });
 
     statsDiv.innerHTML = statsHtml;
 
-    document.querySelectorAll('.stats').forEach(statDiv => {
+    document.querySelectorAll('.stats:not(.first-child)').forEach(statDiv => {
       const button = statDiv.querySelector('.pin-button');
       button.style.display = 'none';
 
       statDiv.addEventListener('mouseenter', () => {
-        button.style.display = 'inline-block';
+        button.style.display = 'block';
       });
 
       statDiv.addEventListener('mouseleave', () => {
