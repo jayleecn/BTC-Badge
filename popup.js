@@ -30,7 +30,7 @@ const displayStats = data => {
   const piMultiple = parseFloat(data.current_pimultiple).toFixed(1);
 
   const statsOrder = [
-    { key: 'btc_price', label: 'BTC Price', link:'https://coinmarketcap.com/currencies/bitcoin/historical-data/', value: btcPrice },
+    { key: 'btc_price', label: 'BTC Price', link:'https://coinmarketcap.com/currencies/bitcoin/', value: btcPrice },
     { key: 'mvrvzscore', label: 'MVRV Z-Score',link:'https://bitcoinition.com/charts/mvrv-z-score/',  value: mvrvZScore },
     { key: 'pimultiple', label: 'PI Multiple',link:'https://bitcoinition.com/charts/pimultiple/',  value: piMultiple }
   ];
