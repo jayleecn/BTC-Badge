@@ -1,22 +1,29 @@
 {
-  "manifest_version": 3,
-  "name": "Bitcoin Badge",
-  "version": "0.1",
-  "description": "BTC Badge: BTC Price or MVRV Z-score or Pi Multiple",
-  "permissions": [
-    "alarms",
-    "storage"
-  ],
-  "host_permissions": ["https://bitcoinition.com/"],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "icons": {
-    "16": "icon16.png",
-    "128": "icon128.png"
-  }
+    "manifest_version": 3,
+    "name": "BTC Badge - Bitcoin Price Ticker",
+    "version": "0.1",
+    "description": "Track BTC price, MVRV Z-score, or Pi multiple via Chrome badge",
+    "permissions":
+    [
+        "alarms",
+        "storage"
+    ],
+    "host_permissions":
+    [
+        "https://bitcoinition.com/"
+    ],
+    "action":
+    {
+        "default_popup": "popup.html",
+        "default_icon": "icon.png"
+    },
+    "background":
+    {
+        "service_worker": "background.js"
+    },
+    "icons":
+    {
+        "16": "icon16.png",
+        "128": "icon128.png"
+    }
 }
