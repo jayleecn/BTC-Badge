@@ -1,49 +1,86 @@
 body {
-    width: 170px;
-    padding: 10px;
+    width: 200px;
+    padding: 0;
+    margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color: #ffffff;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 8px;
+}
+
+.header-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+.header-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
 }
 
 .stats {
-    margin-bottom: 10px;
-    padding: 5px; /* 已经调整过的右侧内边距 */
+    margin-bottom: 8px;
+    padding: 10px 12px;
     background-color: white;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     position: relative;
     min-height: 24px;
-    line-height: 24px;  /* 新增的行高，使内容垂直居中 */
-    display: block;  /* 移除 flexbox 布局，改为 block 布局 */
-    justify-content: space-between;
+    line-height: 24px;
+    display: block;
+    transition: all 0.2s ease;
+}
+
+.stats:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
 }
 
 .stats.first-child {
-    font-weight: bold;
-    font-size: 1.2em;
+    font-weight: 600;
+    font-size: 1.1em;
+    background-color: #f8f9fa;
 }
+
 .stats span {
-    color: blue;
+    color: #1a73e8;
+    font-weight: 500;
 }
+
 .pin-button {
     position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 30px;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
     display: none;
     background: none;
     border: none;
     font-size: 16px;
     cursor: pointer;
     padding: 0;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
+
 .pin-button:hover {
-    opacity: 0.8;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 a {
-    color: inherit;  /* 继承父元素的文字颜色 */
-    text-decoration: none;  /* 去除下划线 */
+    color: inherit;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #1a73e8;
 }
