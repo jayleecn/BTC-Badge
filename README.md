@@ -15,6 +15,12 @@ A Chrome extension that displays real-time Bitcoin metrics directly in your brow
 
 ## Installation
 
+### Option 1: Install from Chrome Web Store (Recommended)
+
+Visit [BTC Badge on Chrome Web Store](https://chromewebstore.google.com/detail/btc-badge-bitcoin-price-t/ifjgfkaoepolegjfndicdmcmigjdoofe) and click "Add to Chrome" to install.
+
+### Option 2: Install from Source
+
 1. Download or clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
