@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
     "name": "BTC Badge - Bitcoin Price Ticker",
-    "version": "0.2.1",
-    "description": "Track BTC price, MVRV Z-score, and Pi multiple on the Chrome toolbar badge",
+    "version": "0.2.2",
+    "description": "Track BTC price, MVRV Z-score, or Pi multiple via Chrome badge",
     "permissions": [
         "alarms",
         "storage"

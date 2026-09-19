@@ -1,7 +1,9 @@
 /** Shared fetch helpers for BTC Badge metric sources. */
 import { CONFIG } from './config.js';
 
-export const isFiniteNumber = (value) => Number.isFinite(Number(value));
+/** Reject null/undefined/'' — Number(null)===0 would otherwise fake a valid metric. */
+export const isFiniteNumber = (value) =>
+    value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
 
 export const isFresh = (entry, ttl) =>
     Boolean(entry && entry.timestamp && (Date.now() - entry.timestamp) < ttl);
