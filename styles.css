@@ -68,6 +68,11 @@ body {
     transition: color 0.2s ease;
 }
 
+.stats span.unavailable {
+    color: #5f6368;
+    font-weight: 400;
+}
+
 .pin-button {
     position: absolute;
     right: 8px;
@@ -91,6 +96,20 @@ body {
 
 .pin-button:hover {
     background-color: rgba(0, 0, 0, 0.05);
+}
+
+.metrics-note {
+    margin: 4px 0 8px;
+    padding: 0 2px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #5f6368;
+}
+
+.metrics-note.source {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #80868b;
 }
 
 a {

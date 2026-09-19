@@ -1,16 +1,42 @@
 import { CONFIG } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadBadgeMetric();
+    ensureDefaultBadgeMetric();
     fetchBitcoinStats();
 });
 
+const ensureDefaultBadgeMetric = () => {
+    chrome.storage.sync.get('badgeMetric', (result) => {
+        if (chrome.runtime.lastError) {
+            console.warn('storage.sync.get failed:', chrome.runtime.lastError.message);
+            return;
+        }
+        if (!result.badgeMetric) {
+            chrome.storage.sync.set({ badgeMetric: CONFIG.DEFAULT_BADGE_METRIC });
+        }
+    });
+};
+
 const fetchBitcoinStats = () => {
     const statsDiv = document.getElementById('stats');
+    if (!statsDiv) return;
     statsDiv.textContent = 'Loading...';
 
-    chrome.runtime.sendMessage({action: "fetchBitcoinStats"}, response => {
-        if (response.success) {
+    chrome.runtime.sendMessage({ action: 'fetchBitcoinStats' }, response => {
+        if (chrome.runtime.lastError) {
+            console.error('Message error:', chrome.runtime.lastError.message);
+            statsDiv.textContent = 'Failed to reach background. Retrying in 5 seconds...';
+            setTimeout(fetchBitcoinStats, 5000);
+            return;
+        }
+
+        if (!response) {
+            statsDiv.textContent = 'No response from background. Retrying in 5 seconds...';
+            setTimeout(fetchBitcoinStats, 5000);
+            return;
+        }
+
+        if (response.success && response.data?.data) {
             displayStats(response.data.data);
         } else {
             console.error('Error:', response.error);
@@ -18,6 +44,23 @@ const fetchBitcoinStats = () => {
             setTimeout(fetchBitcoinStats, 5000);
         }
     });
+};
+
+const formatPrice = (value) => {
+    if (!Number.isFinite(Number(value))) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        notation: 'compact',
+        compactDisplay: 'short'
+    }).format(parseFloat(value));
+};
+
+const formatScore = (value) => {
+    if (!Number.isFinite(Number(value))) return 'N/A';
+    return parseFloat(value).toFixed(1);
 };
 
 const createStatElement = (stat, isFirst) => {
@@ -28,16 +71,21 @@ const createStatElement = (stat, isFirst) => {
     const link = document.createElement('a');
     link.href = stat.link;
     link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     link.textContent = stat.label;
 
     const span = document.createElement('span');
     span.textContent = stat.value;
+    if (stat.unavailable) {
+        span.classList.add('unavailable');
+        span.title = 'No free public API currently provides this metric';
+    }
 
     div.appendChild(link);
     div.appendChild(document.createTextNode(': '));
     div.appendChild(span);
 
-    if (!isFirst) {
+    if (!isFirst && !stat.unavailable) {
         const pinButton = document.createElement('button');
         pinButton.className = 'pin-button';
         pinButton.title = 'set as badge';
@@ -46,9 +94,8 @@ const createStatElement = (stat, isFirst) => {
 
         div.appendChild(pinButton);
 
-        // 事件监听
-        div.addEventListener('mouseenter', () => pinButton.style.display = 'block');
-        div.addEventListener('mouseleave', () => pinButton.style.display = 'none');
+        div.addEventListener('mouseenter', () => { pinButton.style.display = 'block'; });
+        div.addEventListener('mouseleave', () => { pinButton.style.display = 'none'; });
         pinButton.addEventListener('click', () => updateBadgeMetric(stat.key));
     }
 
@@ -57,39 +104,71 @@ const createStatElement = (stat, isFirst) => {
 
 const displayStats = data => {
     const statsDiv = document.getElementById('stats');
-    
-    const btcPrice = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-        notation: 'compact',
-        compactDisplay: 'short'
-    }).format(parseFloat(data.btc_price));
+    if (!statsDiv || !data) return;
 
-    const mvrvZScore = parseFloat(data.current_mvrvzscore).toFixed(1);
-    const piMultiple = parseFloat(data.current_pimultiple).toFixed(1);
+    const mvrvUnavailable = !Number.isFinite(Number(data.current_mvrvzscore));
+    const piUnavailable = !Number.isFinite(Number(data.current_pimultiple));
 
     const statsOrder = [
-        { key: 'btc_price', label: 'BTC Price', link:'https://coinmarketcap.com/currencies/bitcoin/', value: btcPrice },
-        { key: 'mvrvzscore', label: 'MVRV Z-Score',link:'https://bitcoinition.com/charts/mvrv-z-score/',  value: mvrvZScore },
-        { key: 'pimultiple', label: 'PI Multiple',link:'https://bitcoinition.com/charts/pimultiple/',  value: piMultiple }
+        {
+            key: 'btc_price',
+            label: 'BTC Price',
+            link: CONFIG.METRIC_LINKS.btc_price,
+            value: formatPrice(data.btc_price),
+            unavailable: !Number.isFinite(Number(data.btc_price))
+        },
+        {
+            key: 'mvrvzscore',
+            label: 'MVRV Z-Score',
+            link: CONFIG.METRIC_LINKS.mvrvzscore,
+            value: formatScore(data.current_mvrvzscore),
+            unavailable: mvrvUnavailable
+        },
+        {
+            key: 'pimultiple',
+            label: 'PI Multiple',
+            link: CONFIG.METRIC_LINKS.pimultiple,
+            value: formatScore(data.current_pimultiple),
+            unavailable: piUnavailable
+        }
     ];
 
-    chrome.storage.sync.get('badgeMetric', (data) => {
-        const currentMetric = data.badgeMetric || CONFIG.DEFAULT_BADGE_METRIC;
-        
+    chrome.storage.sync.get('badgeMetric', (storage) => {
+        if (chrome.runtime.lastError) {
+            console.warn('storage.sync.get failed:', chrome.runtime.lastError.message);
+        }
+
+        let currentMetric = storage?.badgeMetric || CONFIG.DEFAULT_BADGE_METRIC;
+        // If pinned metric is unavailable, fall back to price for ordering.
+        const pinned = statsOrder.find(stat => stat.key === currentMetric);
+        if (!pinned || pinned.unavailable) {
+            currentMetric = 'btc_price';
+        }
+
         const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
-        if (selectedStatIndex !== -1) {
+        if (selectedStatIndex > 0) {
             const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
             statsOrder.unshift(selectedStat);
         }
 
-        // 使用 DocumentFragment 优化 DOM 操作
         const fragment = document.createDocumentFragment();
         statsOrder.forEach((stat, index) => {
             fragment.appendChild(createStatElement(stat, index === 0));
         });
+
+        if (mvrvUnavailable || piUnavailable) {
+            const note = document.createElement('p');
+            note.className = 'metrics-note';
+            note.textContent = 'MVRV / Pi unavailable: former bitcoinition.com API is gone; no free public replacement yet. Price still updates.';
+            fragment.appendChild(note);
+        }
+
+        if (data.price_source) {
+            const source = document.createElement('p');
+            source.className = 'metrics-note source';
+            source.textContent = `Price source: ${data.price_source}`;
+            fragment.appendChild(source);
+        }
 
         statsDiv.innerHTML = '';
         statsDiv.appendChild(fragment);
@@ -97,16 +176,15 @@ const displayStats = data => {
 };
 
 const updateBadgeMetric = (metric) => {
-    chrome.storage.sync.set({badgeMetric: metric}, () => {
-        chrome.runtime.sendMessage({action: "updateBadgeMetric", metric: metric});
-        fetchBitcoinStats();
-    });
-};
-
-const loadBadgeMetric = () => {
-    chrome.storage.sync.get('badgeMetric', (data) => {
-        if (data.badgeMetric) {
-            fetchBitcoinStats();
+    chrome.storage.sync.set({ badgeMetric: metric }, () => {
+        if (chrome.runtime.lastError) {
+            console.warn('Failed to save badgeMetric:', chrome.runtime.lastError.message);
         }
+        chrome.runtime.sendMessage({ action: 'updateBadgeMetric', metric }, () => {
+            if (chrome.runtime.lastError) {
+                console.warn('updateBadgeMetric message failed:', chrome.runtime.lastError.message);
+            }
+            fetchBitcoinStats();
+        });
     });
 };
