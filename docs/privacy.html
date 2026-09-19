@@ -63,26 +63,26 @@
         </div>
 
         <h2>1. Information Collection and Use</h2>
-        <p>BTC Badge is designed with privacy in mind and operates with minimal data collection. The extension only retrieves publicly available Bitcoin market data from public price APIs (Coinbase, mempool.space, Kraken, and CoinPaprika as fallbacks) to display the current Bitcoin price in your browser's toolbar.</p>
+        <p>BTC Badge is designed with privacy in mind and operates with minimal data collection. The extension only retrieves publicly available Bitcoin market and on-chain summary data to display BTC price, MVRV Z-score, and Pi multiple in your browser's toolbar.</p>
 
         <h2>2. Data Storage</h2>
         <p>We use Chrome's storage API solely for:</p>
         <ul>
-            <li>Storing your display preferences</li>
-            <li>Temporarily caching Bitcoin price data to minimize API calls</li>
+            <li>Storing your display preferences (which metric is pinned to the badge)</li>
+            <li>Temporarily caching price, MVRV, and OHLC-derived Pi values locally to minimize API calls</li>
         </ul>
-        <p>All data is stored locally on your device and is never transmitted to external servers beyond the public market-data requests described above.</p>
+        <p>All preference and cache data is stored locally on your device and is never transmitted to external servers beyond the public data requests described below.</p>
 
         <h2>3. Permissions</h2>
         <p>BTC Badge requires minimal permissions to function:</p>
         <ul>
-            <li>Host access to the listed public price APIs: to fetch Bitcoin price data</li>
+            <li>Host access to public data APIs (Coinbase, mempool.space, Kraken, CoinPaprika, bitcoin-data.com): to fetch price and on-chain metrics</li>
             <li>Storage: to save your preferences and cache locally</li>
             <li>Alarms: to refresh the badge on a schedule</li>
         </ul>
 
         <h2>4. Third-Party Services</h2>
-        <p>We only interact with public Bitcoin price endpoints (Coinbase, mempool.space, Kraken, CoinPaprika). No personal information is shared with these or any other third-party service.</p>
+        <p>We interact only with public endpoints from Coinbase, mempool.space, Kraken, CoinPaprika, and bitcoin-data.com (BGeometrics). No personal information is shared with these or any other third-party service. No API keys are embedded in the extension.</p>
 
         <h2>5. Updates to Privacy Policy</h2>
         <p>We may update this privacy policy as needed. Significant changes will be communicated through the Chrome Web Store and this page.</p>
