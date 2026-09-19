@@ -1,14 +1,20 @@
 {
     "manifest_version": 3,
     "name": "BTC Badge - Bitcoin Price Ticker",
-    "version": "0.1.1",
+    "version": "0.2.3",
     "description": "Track BTC price, MVRV Z-score, or Pi multiple via Chrome badge",
     "permissions": [
         "alarms",
         "storage"
     ],
     "host_permissions": [
-        "https://bitcoinition.com/"
+        "https://api.coinbase.com/",
+        "https://api.exchange.coinbase.com/",
+        "https://mempool.space/",
+        "https://api.kraken.com/",
+        "https://api.coinpaprika.com/",
+        "https://api.bitcoin-data.com/",
+        "https://bitcoin-data.com/"
     ],
     "action": {
         "default_popup": "popup.html",
