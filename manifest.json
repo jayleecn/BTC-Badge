@@ -1,17 +1,20 @@
 {
     "manifest_version": 3,
     "name": "BTC Badge - Bitcoin Price Ticker",
-    "version": "0.2.0",
-    "description": "Track BTC price on the Chrome badge (MVRV/Pi shown when a free source is available)",
+    "version": "0.2.1",
+    "description": "Track BTC price, MVRV Z-score, and Pi multiple on the Chrome toolbar badge",
     "permissions": [
         "alarms",
         "storage"
     ],
     "host_permissions": [
         "https://api.coinbase.com/",
+        "https://api.exchange.coinbase.com/",
         "https://mempool.space/",
         "https://api.kraken.com/",
-        "https://api.coinpaprika.com/"
+        "https://api.coinpaprika.com/",
+        "https://api.bitcoin-data.com/",
+        "https://bitcoin-data.com/"
     ],
     "action": {
         "default_popup": "popup.html",
