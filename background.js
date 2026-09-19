@@ -23,6 +23,24 @@ const persistCaches = () => {
     });
 };
 
+const clearMetricCaches = () =>
+    new Promise((resolve) => {
+        chrome.storage.local.remove(
+            ['priceCache', 'piCache', 'mvrvCache', 'cachedData', 'cacheTimestamp'],
+            () => {
+                caches.price = null;
+                caches.pi = null;
+                caches.mvrv = null;
+                resolve();
+            }
+        );
+    });
+
+const hydrateCache = (entry) =>
+    entry && isFiniteNumber(entry.value)
+        ? entry
+        : null;
+
 const loadCachesFromStorage = () =>
     new Promise((resolve) => {
         chrome.storage.local.get(
@@ -33,11 +51,11 @@ const loadCachesFromStorage = () =>
                     resolve(false);
                     return;
                 }
-                if (result.priceCache) caches.price = result.priceCache;
-                if (result.piCache) caches.pi = result.piCache;
-                if (result.mvrvCache) caches.mvrv = result.mvrvCache;
+                caches.price = hydrateCache(result.priceCache);
+                caches.pi = hydrateCache(result.piCache);
+                caches.mvrv = hydrateCache(result.mvrvCache);
 
-                if (!caches.price && result.cachedData?.btc_price != null) {
+                if (!caches.price && isFiniteNumber(result.cachedData?.btc_price)) {
                     caches.price = {
                         value: Number(result.cachedData.btc_price),
                         source: result.cachedData.price_source || 'legacy',
@@ -203,6 +221,14 @@ const ensureBadgeMetricPersisted = () => {
         currentBadgeMetric = CONFIG.DEFAULT_BADGE_METRIC;
     });
 };
+
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === 'update' || details.reason === 'install') {
+        clearMetricCaches().then(() => {
+            fetchDataAndUpdateBadge().catch(() => {});
+        });
+    }
+});
 
 (async () => {
     await loadCachesFromStorage();
