@@ -22,7 +22,7 @@ const fetchBitcoinStats = () => {
     if (!statsDiv) return;
     statsDiv.textContent = 'Loading...';
 
-    chrome.runtime.sendMessage({ action: 'fetchBitcoinStats' }, response => {
+    chrome.runtime.sendMessage({ action: 'fetchBitcoinStats' }, (response) => {
         if (chrome.runtime.lastError) {
             console.error('Message error:', chrome.runtime.lastError.message);
             statsDiv.textContent = 'Failed to reach background. Retrying in 5 seconds...';
@@ -78,7 +78,7 @@ const createStatElement = (stat, isFirst) => {
     span.textContent = stat.value;
     if (stat.unavailable) {
         span.classList.add('unavailable');
-        span.title = 'No free public API currently provides this metric';
+        span.title = 'Metric temporarily unavailable';
     }
 
     div.appendChild(link);
@@ -102,7 +102,7 @@ const createStatElement = (stat, isFirst) => {
     return div;
 };
 
-const displayStats = data => {
+const displayStats = (data) => {
     const statsDiv = document.getElementById('stats');
     if (!statsDiv || !data) return;
 
@@ -139,13 +139,12 @@ const displayStats = data => {
         }
 
         let currentMetric = storage?.badgeMetric || CONFIG.DEFAULT_BADGE_METRIC;
-        // If pinned metric is unavailable, fall back to price for ordering.
-        const pinned = statsOrder.find(stat => stat.key === currentMetric);
+        const pinned = statsOrder.find((stat) => stat.key === currentMetric);
         if (!pinned || pinned.unavailable) {
             currentMetric = 'btc_price';
         }
 
-        const selectedStatIndex = statsOrder.findIndex(stat => stat.key === currentMetric);
+        const selectedStatIndex = statsOrder.findIndex((stat) => stat.key === currentMetric);
         if (selectedStatIndex > 0) {
             const selectedStat = statsOrder.splice(selectedStatIndex, 1)[0];
             statsOrder.unshift(selectedStat);
@@ -159,14 +158,28 @@ const displayStats = data => {
         if (mvrvUnavailable || piUnavailable) {
             const note = document.createElement('p');
             note.className = 'metrics-note';
-            note.textContent = 'MVRV / Pi unavailable: former bitcoinition.com API is gone; no free public replacement yet. Price still updates.';
+            const missing = [
+                mvrvUnavailable ? 'MVRV' : null,
+                piUnavailable ? 'Pi' : null
+            ].filter(Boolean).join(' / ');
+            note.textContent = `${missing} temporarily unavailable (network or rate limit). Cached values are kept when possible.`;
+            fragment.appendChild(note);
+        } else if (data.mvrv_delayed) {
+            const note = document.createElement('p');
+            note.className = 'metrics-note';
+            const asOf = data.mvrv_date ? ` (as of ${data.mvrv_date})` : '';
+            note.textContent = `MVRV Z-score from free bitcoin-data.com tier may be delayed up to ~7 days${asOf}.`;
             fragment.appendChild(note);
         }
 
-        if (data.price_source) {
+        const sources = [];
+        if (data.price_source) sources.push(`price: ${data.price_source}`);
+        if (data.mvrv_source) sources.push(`mvrv: ${data.mvrv_source}`);
+        if (data.pi_source) sources.push(`pi: ${data.pi_source}`);
+        if (sources.length) {
             const source = document.createElement('p');
             source.className = 'metrics-note source';
-            source.textContent = `Price source: ${data.price_source}`;
+            source.textContent = `Sources — ${sources.join(' · ')}`;
             fragment.appendChild(source);
         }
 
