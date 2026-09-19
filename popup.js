@@ -46,8 +46,12 @@ const fetchBitcoinStats = () => {
     });
 };
 
+/** Reject null/undefined/'' — Number(null)===0 must not look available. Never show "NaN". */
+const isDisplayableNumber = (value) =>
+    value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+
 const formatPrice = (value) => {
-    if (!Number.isFinite(Number(value))) return 'N/A';
+    if (!isDisplayableNumber(value)) return 'N/A';
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -55,12 +59,17 @@ const formatPrice = (value) => {
         maximumFractionDigits: 0,
         notation: 'compact',
         compactDisplay: 'short'
-    }).format(parseFloat(value));
+    }).format(Number(value));
 };
 
 const formatScore = (value) => {
-    if (!Number.isFinite(Number(value))) return 'N/A';
-    return parseFloat(value).toFixed(1);
+    if (!isDisplayableNumber(value)) return 'N/A';
+    return Number(value).toFixed(1);
+};
+
+const isMetricUnavailable = (value, statusFlag) => {
+    if (statusFlag === 'unavailable') return true;
+    return !isDisplayableNumber(value);
 };
 
 const createStatElement = (stat, isFirst) => {
@@ -106,8 +115,14 @@ const displayStats = (data) => {
     const statsDiv = document.getElementById('stats');
     if (!statsDiv || !data) return;
 
-    const mvrvUnavailable = !Number.isFinite(Number(data.current_mvrvzscore));
-    const piUnavailable = !Number.isFinite(Number(data.current_pimultiple));
+    const mvrvUnavailable = isMetricUnavailable(
+        data.current_mvrvzscore,
+        data.metrics_status?.mvrvzscore
+    );
+    const piUnavailable = isMetricUnavailable(
+        data.current_pimultiple,
+        data.metrics_status?.pimultiple
+    );
 
     const statsOrder = [
         {
@@ -115,7 +130,10 @@ const displayStats = (data) => {
             label: 'BTC Price',
             link: CONFIG.METRIC_LINKS.btc_price,
             value: formatPrice(data.btc_price),
-            unavailable: !Number.isFinite(Number(data.btc_price))
+            unavailable: isMetricUnavailable(
+                data.btc_price,
+                data.metrics_status?.btc_price
+            )
         },
         {
             key: 'mvrvzscore',

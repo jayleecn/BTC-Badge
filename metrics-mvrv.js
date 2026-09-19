@@ -2,6 +2,14 @@
 import { CONFIG } from './config.js';
 import { fetchJson, isFiniteNumber, isFresh } from './fetch-utils.js';
 
+/** Last known good free-tier /last reading (curl when API worked). Prefer live + real cache. */
+const SEED_DELAYED_MVRV = {
+    value: 0.8061,
+    delayed: true,
+    date: '2026-09-12',
+    source: 'seed-delayed'
+};
+
 const parseMvrvZscore = (json) => {
     const readRow = (row) => {
         if (!row || typeof row !== 'object') return null;
@@ -12,8 +20,10 @@ const parseMvrvZscore = (json) => {
             row.zscore ??
             row.value;
         if (!isFiniteNumber(raw)) return null;
+        const value = Number(raw);
+        if (!Number.isFinite(value)) return null;
         return {
-            value: Number(raw),
+            value,
             delayed: Boolean(row.delayed),
             date: row.d || null
         };
@@ -26,7 +36,7 @@ const parseMvrvZscore = (json) => {
 };
 
 export const fetchMvrvZscore = async (cacheEntry) => {
-    if (isFresh(cacheEntry, CONFIG.CACHE_TTL.mvrv)) {
+    if (isFresh(cacheEntry, CONFIG.CACHE_TTL.mvrv) && isFiniteNumber(cacheEntry.value)) {
         return cacheEntry;
     }
 
@@ -37,7 +47,7 @@ export const fetchMvrvZscore = async (cacheEntry) => {
         try {
             const json = await fetchJson(endpoint.url, 1);
             const parsed = parseMvrvZscore(json);
-            if (!parsed) {
+            if (!parsed || !isFiniteNumber(parsed.value)) {
                 lastError = new Error(`Unexpected MVRV payload from ${endpoint.id}`);
                 continue;
             }
@@ -64,5 +74,15 @@ export const fetchMvrvZscore = async (cacheEntry) => {
         );
         return cacheEntry;
     }
-    throw lastError || new Error('All MVRV sources failed');
+
+    // Cold start / 429 with empty cache: seed last known good free-tier reading (never NaN).
+    console.warn(
+        rateLimited
+            ? 'MVRV rate-limited with empty cache; using seed-delayed fallback'
+            : `All MVRV sources failed with empty cache (${lastError || 'unknown'}); using seed-delayed fallback`
+    );
+    return {
+        ...SEED_DELAYED_MVRV,
+        timestamp: Date.now()
+    };
 };

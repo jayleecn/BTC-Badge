@@ -83,11 +83,11 @@ const loadCachesFromStorage = () =>
         );
     });
 
-/** Normalize to legacy field names so popup/badge keep working. */
+/** Normalize to legacy field names so popup/badge keep working. Never emit NaN. */
 const buildCombinedPayload = () => {
-    const price = caches.price?.value ?? null;
-    const mvrv = caches.mvrv?.value ?? null;
-    const pi = caches.pi?.value ?? null;
+    const price = isFiniteNumber(caches.price?.value) ? Number(caches.price.value) : null;
+    const mvrv = isFiniteNumber(caches.mvrv?.value) ? Number(caches.mvrv.value) : null;
+    const pi = isFiniteNumber(caches.pi?.value) ? Number(caches.pi.value) : null;
 
     return {
         btc_price: price,
@@ -167,6 +167,9 @@ const fetchDataAndUpdateBadge = async () => {
     } catch (error) {
         errors.push(error);
         console.error('Price fetch failed:', error);
+        if (!isFiniteNumber(caches.price?.value)) {
+            caches.price = null;
+        }
     }
 
     const livePrice = caches.price?.value;
@@ -176,13 +179,20 @@ const fetchDataAndUpdateBadge = async () => {
     } catch (error) {
         errors.push(error);
         console.warn('Pi fetch failed:', error);
+        if (!isFiniteNumber(caches.pi?.value)) {
+            caches.pi = null;
+        }
     }
 
     try {
-        caches.mvrv = await fetchMvrvZscore(caches.mvrv);
+        const next = await fetchMvrvZscore(caches.mvrv);
+        caches.mvrv = next && isFiniteNumber(next.value) ? next : null;
     } catch (error) {
         errors.push(error);
         console.warn('MVRV fetch failed:', error);
+        if (!isFiniteNumber(caches.mvrv?.value)) {
+            caches.mvrv = null;
+        }
     }
 
     const data = buildCombinedPayload();
