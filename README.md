@@ -39,7 +39,7 @@ Visit [BTC Badge on Chrome Web Store](https://chromewebstore.google.com/detail/b
 - **MVRV Z-Score**: Market Value to Realized Value Z-Score (from [bitcoin-data.com](https://bitcoin-data.com/) / BGeometrics)
 - **Pi Multiple**: Local computation `price / (2 × SMA(350))` from daily OHLC closes (classic simplification used by many BTC tools; related to the Pi Cycle Top idea, not a licensed LookIntoBitcoin feed)
 
-## Data Sources (v0.2.1)
+## Data Sources (current source: v0.2.3)
 
 **Breaking change vs ≤0.1.1:** The previous single-source API `https://bitcoinition.com/current.json` now returns **HTTP 404** (site appears gone / replaced). That endpoint previously supplied `btc_price`, `current_mvrvzscore`, and `current_pimultiple` together. v0.2.x rebuilds all three from free public sources.
 
@@ -67,11 +67,13 @@ Formula: **`live_price / (2 * SMA(350))`**. OHLC/SMA cache TTL ≈ **1 hour** (d
 
 - `GET https://api.bitcoin-data.com/v1/mvrv-zscore/last`
 - Fallback: `https://bitcoin-data.com/api/v1/mvrv-zscore/last`
+- Series fallback: `https://api.bitcoin-data.com/v1/mvrv-zscore` (last row)
 
 **Honesty notes:**
 
 - Free tier is tightly rate-limited (~8–10 requests/hour). The extension caches MVRV for **~12 hours** and reuses stale cache on HTTP 429.
 - Free `/last` responses may include `"delayed": true` — real-time (last ~7 days) can require a paid plan. The popup notes when a delayed value is shown.
+- If all MVRV endpoints fail on a cold start and there is no stored value, the implementation returns an embedded, delayed reading dated **2026-09-12** (`source: seed-delayed`). This is historical fallback data, not a fresh API response; inspect `mvrv_source` and `mvrv_date` when debugging freshness.
 - No paid API keys are required or shipped in this repo.
 
 ## Version History
@@ -91,7 +93,27 @@ Feel free to submit issues and enhancement requests!
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project declares the MIT License.
 
 ---
 Made with ❤️ for Bitcoin enthusiasts
+
+## Developer navigation
+
+No package installation or bundling is required; use the source installation steps above and reload the unpacked extension after changes.
+
+| Task | Start here |
+| --- | --- |
+| Endpoint order, TTLs, retry limits | [config.js](config.js) |
+| Price / MVRV / Pi fetch and parsing | [metrics-price.js](metrics-price.js), [metrics-mvrv.js](metrics-mvrv.js), [metrics-pi.js](metrics-pi.js) |
+| Shared number validation, freshness, HTTP retries | [fetch-utils.js](fetch-utils.js) |
+| Alarms, cache hydration, badge formatting, popup messages | [background.js](background.js) |
+| Popup display and pinning | [popup.html](popup.html), [popup.js](popup.js), [styles.css](styles.css) |
+| Version, permissions, extension entry points | [manifest.json](manifest.json) |
+| Marketing page / privacy page | [index.html](index.html), [docs/privacy.html](docs/privacy.html) |
+
+`index.html` is a marketing page; the extension popup is `popup.html`. Endpoint and TTL changes belong in `config.js`; the README describes that configuration. The current manifest version is 0.2.3; the version history above records earlier releases.
+
+The worker uses `chrome.storage.local` for metric caches and `chrome.storage.sync` for `badgeMetric`. Messages are `fetchBitcoinStats` and `updateBadgeMetric`; successful fetch replies have shape `{ success: true, data: { data: metrics } }`. Legacy metric field names remain part of that contract.
+
+Smoke check: load the unpacked extension, open the popup, pin each metric, and confirm the badge survives a worker restart. Inspect worker errors and the popup's source/date note when endpoints fail. There is no automated test runner in this repository.
